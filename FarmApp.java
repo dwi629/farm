@@ -24,6 +24,9 @@ public class FarmApp extends Application {
     private TextField operateRowField;
     private TextField operateIdField;
 
+    private volatile boolean autoRunning = true;
+    private Label threadStatusLabel;
+
     @Override
     public void start(Stage stage) {
         farm = new Farm(10);
@@ -42,6 +45,7 @@ public class FarmApp extends Application {
         stage.show();
 
         refreshFarmView();
+        startAutoGrowThread();
     }
 
     /**
@@ -220,6 +224,29 @@ public class FarmApp extends Application {
         otherGrid.setHgap(10);
         otherGrid.setVgap(10);
 
+        Button autoOnBtn = new Button("开启自动照料");
+        Button autoOffBtn = new Button("暂停自动照料");
+        threadStatusLabel = new Label("自动照料：运行中");
+        threadStatusLabel.setStyle("-fx-text-fill:green;");
+
+        autoOnBtn.setOnAction(e -> {
+            autoRunning = true;
+            threadStatusLabel.setText("自动照料：运行中");
+            threadStatusLabel.setStyle("-fx-text-fill:#58af58;");
+            resultArea.appendText("已开启自动照料\n\n");
+        });
+
+        autoOffBtn.setOnAction(e -> {
+            autoRunning = false;
+            threadStatusLabel.setText("自动照料：已暂停");
+            threadStatusLabel.setStyle("-fx-text-fill:#de7373;");
+            resultArea.appendText("已暂停自动照料\n\n");
+        });
+        
+        otherGrid.add(autoOnBtn, 0, 3);
+        otherGrid.add(autoOffBtn, 1, 3);
+        otherGrid.add(threadStatusLabel, 0, 4, 2, 1);
+
         Button showBtn = new Button("显示所有");
         Button clearBtn = new Button("清空农场");
         Button saveBtn = new Button("保存文件");
@@ -357,6 +384,40 @@ public class FarmApp extends Application {
 
             farmRowsBox.getChildren().add(rowBox);
         }
+    }
+
+    private void startAutoGrowThread() {
+        Thread autoThread = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                if (!autoRunning) {
+                    try {
+                        Thread.sleep(500);
+                        continue;
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                }
+                try {
+                    Thread.sleep(8000);
+
+                    for (int i = 0; i < farm.getFarm().size(); i++) {
+                        for (FarmObject obj : farm.getFarm().get(i)) {
+                            obj.care();
+                        }
+                    }
+
+                    javafx.application.Platform.runLater(() -> {
+                        resultArea.appendText("【自动照料】所有作物/动物已完成照料成长\n\n");
+                    });
+
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        });
+        autoThread.setDaemon(true);
+        autoThread.setName("farm-auto-grow-thread");
+        autoThread.start();
     }
 
     private String getEmoji(FarmObject obj) {
