@@ -50,16 +50,18 @@ public class Farm {
         }
     }
 
-    public void add(int row, FarmObject obj){
-        if(row<0||row>=farm.size()){
-            System.out.println("行数错误！");return;
-        }
-        else if(farm.get(row).size()==MAX){
-            System.out.println("行已满！");return;
+    public boolean add(int row, FarmObject obj) {
+        // 简单防重复ID
+        for (var list : farm) {
+            for (FarmObject o : list) {
+                if (o.getId() == obj.getId()) {
+                    return false;
+                }
+            }
         }
         farm.get(row).add(obj);
         total++;
-        System.out.println("添加成功！");
+        return true;
     }
 
 

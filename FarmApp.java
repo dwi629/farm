@@ -136,8 +136,9 @@ public class FarmApp extends Application {
                     case "牛": obj = new Cow(id, name, "动物"); break;
                 }
 
-                farm.add(row, obj);
-                resultArea.appendText("添加成功！\n" + obj + "\n\n");
+
+                if(farm.add(row, obj))resultArea.appendText("添加成功！\n" + obj + "\n\n");
+                else resultArea.appendText("ID重复！添加失败！\n\n");
                 refreshFarmView();
             } catch (Exception ex) {
                 resultArea.appendText("添加失败！\n\n");
@@ -242,7 +243,7 @@ public class FarmApp extends Application {
             threadStatusLabel.setStyle("-fx-text-fill:#de7373;");
             resultArea.appendText("已暂停自动照料\n\n");
         });
-        
+
         otherGrid.add(autoOnBtn, 0, 3);
         otherGrid.add(autoOffBtn, 1, 3);
         otherGrid.add(threadStatusLabel, 0, 4, 2, 1);
